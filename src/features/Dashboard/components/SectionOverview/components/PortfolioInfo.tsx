@@ -1,0 +1,309 @@
+import { Box, Flex, Grid, GridItem, HStack, Text } from '@chakra-ui/react'
+import { useMemo, useState } from 'react'
+import { useTranslation } from 'react-i18next'
+
+import Tabs from '@/components/Tabs'
+import { useAppStore } from '@/store/useAppStore'
+import { colors } from '@/theme/cssVariables'
+import { isArray } from '@/utils/judges/judgeType'
+
+import { AssetType } from '../'
+
+import { Select, SelectorItem } from '@/components/Select'
+import PortfolioPieChart, { PORTFOLIO_PIE_COLORS } from './PortfolioPieChart'
+import Decimal from 'decimal.js'
+import { panelCard } from '@/theme/cssBlocks'
+import toPercentString from '@/utils/numberish/toPercentString'
+import { formatCurrency, formatToRawLocaleStr } from '@/utils/numberish/formatter'
+import swapStyles from '../../../../Swap/swap.module.css'
+import tokenLogo from '../../../../../../public/images/token-logo.png'
+
+export type AssetsType = {
+  key: string
+  value: number | string
+  type?: AssetType
+  percentage: number
+}
+
+const isPoolAssets = (assets: AssetsType[]): assets is AssetsType[] =>
+  assets && isArray(assets) && assets.length > 0 && Object.keys(assets[0]).some((key) => key === 'type')
+
+type AssetsCategoryType = {
+  value: 'Assets by pool' | 'Assets by token'
+  label: string
+}
+
+export default function PortfolioInfo({
+  poolAssets,
+  tokenAssets,
+  cardTitle,
+  cardValue
+}: {
+  poolAssets?: AssetsType[]
+  tokenAssets?: AssetsType[]
+  cardTitle?: string
+  cardValue?: number | string
+}) {
+  const isMobile = useAppStore((s) => s.isMobile)
+  const { t } = useTranslation()
+  const assetsCategoryOptions: AssetsCategoryType[] = [
+    {
+      value: 'Assets by pool',
+      label: t('portfolio.assets_by_pool')
+    },
+    {
+      value: 'Assets by token',
+      label: t('portfolio.assets_by_token')
+    }
+  ]
+  const [tab, setTab] = useState<AssetsCategoryType['value']>(assetsCategoryOptions[0].value)
+  const [currentType, setCurrentType] = useState<AssetType>(AssetType.ALL)
+  const connected = useAppStore((s) => s.connected)
+
+  const contractAddress = 'GAYCVRGZH2tHms1c5sCprE2JEbuz8tJ9ZxCNUX1cKwWR'
+
+  const tidyUpAssets = ([...assets]: AssetsType[]) => {
+    const list: AssetsType[] = []
+    const others: AssetsType = isPoolAssets(assets)
+      ? { key: 'Others', value: 0, type: AssetType.ALL, percentage: 0 }
+      : { key: 'Others', value: 0, percentage: 0 }
+    let summary = new Decimal(0)
+    assets
+      .sort((a, b) => Number(b.value) - Number(a.value))
+      .forEach((a) => {
+        summary = summary.add(a.value)
+      })
+    for (let idx = 0; idx < assets.length; idx++) {
+      if (idx < 4 || assets.length <= 5) {
+        list.push({
+          ...assets[idx],
+          percentage: new Decimal(assets[idx].value).div(summary).mul(100).toNumber()
+        })
+      } else {
+        others.value = new Decimal(others.value ?? 0).add(assets[idx].value ?? 0).toNumber()
+        others.percentage += new Decimal(assets[idx].value).div(summary).mul(100).toDecimalPlaces(2).toNumber()
+      }
+    }
+
+    others.value && list.push(others)
+
+    return { summary: summary.toString(), list }
+  }
+
+  const parseTokenAssets = useMemo(() => {
+    if (!tokenAssets) return { summary: '0', list: [] }
+    return tidyUpAssets(tokenAssets)
+  }, [tokenAssets])
+
+  const parsePoolAssets = useMemo(() => {
+    if (!poolAssets) return { summary: '0', list: [] }
+    const filteredAssets = poolAssets.filter((asset) => asset.type === currentType || currentType === AssetType.ALL)
+    return tidyUpAssets(filteredAssets)
+  }, [poolAssets, currentType])
+
+  const onTypeChange = (value: AssetType) => {
+    setCurrentType(value)
+  }
+
+  const currentAsset = tab === assetsCategoryOptions[0].value ? parsePoolAssets : parseTokenAssets
+  return (
+    <Box className="infoCard">
+      <Box>
+        <Box
+          bg={colors.backgroundHead}
+          fontWeight="medium"
+          h="48px"
+          pl="24px"
+          py="13px"
+          borderRadius={'24px 24px 0px 0px'}
+          className={swapStyles.top_header}
+          zIndex={3}
+          position={'relative'}
+        >
+          {cardTitle}
+          {/* {tab} */}
+        </Box>
+        <div style={{ display: 'flex' }}>
+          <Flex background={colors.backgroundHead} className={swapStyles.swapbox_patch_left}></Flex>
+          <Flex background={colors.backgroundCardTap} className={swapStyles.chartbox_patch_right_text}>
+            <Text
+              display={'flex'}
+              justifyContent={'center'}
+              fontSize={'18px'}
+              lineHeight={'26px'}
+              zIndex={4}
+              position={'relative'}
+              pl={'14px'}
+              pt={'7px'}
+              cursor={'pointer'}
+            >
+              {/* {tab} */}
+            </Text>
+          </Flex>
+        </div>
+      </Box>
+      <Box w="full" h="24px" bg={colors.backgroundCardTap}></Box>
+      <Flex
+        {...panelCard}
+        direction="column"
+        borderRadius="0px 24px 24px 24px"
+        border="none"
+        overflow="hidden"
+        boxShadow="none"
+        flex={4}
+        minW="300px"
+        marginTop="-24px"
+        scrollSnapAlign={'start'}
+        scrollMargin={5}
+        onClick={({ currentTarget }) => {
+          if (isMobile) {
+            currentTarget.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
+          }
+        }}
+      >
+        {/* <Tabs
+          isFitted
+          items={assetsCategoryOptions}
+          value={tab}
+          size="md"
+          variant="folder"
+          onChange={setTab}
+          tabItemSX={{ whiteSpace: 'normal' }}
+        /> */}
+
+        <Flex flexWrap="wrap" py="30px" px={['20px', '30px']} flexGrow="inherit" bg={colors.backgroundHead}>
+          {/* {connected ? ( */}
+          <Box
+            flexGrow={2}
+            gridTemplate={[
+              `
+              " .    tab  " auto
+              "pie   pie  " 2fr
+              "total total" 1fr
+              "list  list " 1fr / 2fr 1fr
+            `,
+              `
+              "pie total tab  " auto
+              "pie list  list " auto / minmax(100px, 1fr) 1.5fr 1.5fr
+            `
+            ]}
+            alignItems={'center'}
+            maxHeight={'40vh'}
+            columnGap={6}
+            rowGap={[1, 4]}
+          >
+            <Box className="mainInfo" style={{ display: 'flex' }}>
+              <Box>
+                <img src={tokenLogo.src} alt="" width="80px" style={{ marginRight: '60px' }} />
+              </Box>
+              <Box style={{ fontSize: '24px' }}>
+                <Box className="tokeninfoRow">
+                  <Box>
+                    <span>Name: </span>
+                    <span style={{ color: '#ac7522' }}>Oficial USA Token</span>
+                  </Box>
+                  <Box>
+                    <span>Symbol: </span>
+                    <span style={{ color: '#ac7522' }}>USA</span>
+                  </Box>
+                </Box>
+                <Box className="tokeninfoRow">
+                  <Box style={{ paddingRight: '40px' }}>
+                    <span>Decimals: </span>
+                    <span style={{ color: '#ac7522' }}>9</span>
+                  </Box>
+                  <Box>
+                    <span>Your Balance: </span>
+                    <span style={{ color: '#ac7522' }}>{connected ? cardValue : '--'}</span>
+                  </Box>
+                </Box>
+              </Box>
+            </Box>
+            <Box style={{ paddingTop: '16px', display: 'flex', justifyContent: 'center' }}>
+              <span style={{ marginRight: '5px' }}>CA: </span>
+              <a href="https://dexscreener.com/solana/GAYCVRGZH2tHms1c5sCprE2JEbuz8tJ9ZxCNUX1cKwWR">
+                <span style={{ color: '#51f151' }}>{contractAddress.slice(0, 10) + '...' + contractAddress.slice(-10)}</span>
+              </a>
+            </Box>
+
+            {/* {tab !== 'Assets by token' ? (
+                <GridItem area={'tab'} alignSelf={'center'} justifySelf={'end'}>
+                  <AssetsTab
+                    current={currentType}
+                    items={[
+                      { value: AssetType.STANDARD, label: t('portfolio.section_department_tab_standard') },
+                      { value: AssetType.CONCENTRATED, label: t('portfolio.section_department_tab_clmm') },
+                      { value: AssetType.ALL, label: t('portfolio.section_department_tab_all') }
+                    ]}
+                    onChange={(t) => onTypeChange(t as AssetType)}
+                  />
+                </GridItem>
+              ) : null}
+
+              <GridItem area={'list'}>
+                <PortfolioAssetList assetList={currentAsset.list} />
+              </GridItem> */}
+          </Box>
+        </Flex>
+      </Flex>
+    </Box>
+  )
+}
+function AssetsTotal(props: { total: string | number }) {
+  return (
+    <Text fontSize={['20px', '28px']} fontWeight="medium">
+      {formatCurrency(props.total, { symbol: '$', decimalPlaces: 2 })}
+    </Text>
+  )
+}
+
+function AssetsTab(props: { current: string; items: SelectorItem[]; onChange?: (newTab: string) => void }) {
+  return (
+    <Select
+      variant="filledFlowDark"
+      sx={{ minWidth: '160px' }}
+      items={props.items}
+      value={props.current}
+      onChange={(t) => props.onChange?.(t)}
+    />
+  )
+}
+
+type PortfolioAssetListProps = {
+  assetList: AssetsType[]
+}
+
+function PortfolioAssetList({ assetList }: PortfolioAssetListProps) {
+  return (
+    <Flex direction="column" flex={2}>
+      {assetList.map((asset, idx) => (
+        <HStack fontSize="14px" justifyContent={'flex-end'} alignItems="center" key={`asset-list-key-${idx}`} py={0.5}>
+          <Flex w="full" justifyContent={'space-between'}>
+            <Flex
+              alignItems="center"
+              sx={{
+                '&:before': {
+                  content: '""',
+                  width: '10px',
+                  height: '10px',
+                  borderRadius: '10px',
+                  backgroundColor: PORTFOLIO_PIE_COLORS[idx],
+                  marginRight: '5px'
+                }
+              }}
+            >
+              <Text color={colors.textSecondary}>{asset.key}</Text>
+            </Flex>
+            <Box>
+              <Text textAlign="right">{formatCurrency(asset.value, { symbol: '$', decimalPlaces: 2 })}</Text>
+            </Box>
+          </Flex>
+
+          <Text textAlign="right" width="90px" minW="52px">
+            {formatToRawLocaleStr(toPercentString(asset.percentage))}
+          </Text>
+        </HStack>
+      ))}
+    </Flex>
+  )
+}

@@ -1,0 +1,135 @@
+.chartbox_patch_right {
+  overflow: hidden;
+  z-index: 2;
+  height: 36px;
+  width: 72px;
+  margin-left: -24px;
+  margin-top: -36px;
+  border-radius: 0px 24px 0px 24px;
+}
+
+.chartbox_patch_right_text {
+  overflow: hidden;
+  z-index: 2;
+  height: 36px;
+  width: 76px;
+  margin-left: -24px;
+  margin-top: -36px;
+  border-radius: 0px 24px 0px 24px;
+}
+
+.chartbox_patch_right_htext {
+  overflow: hidden;
+  z-index: 2;
+  height: 24px;
+  width: 76px;
+  margin-left: -24px;
+  margin-top: -24px;
+  border-radius: 0px 24px 0px 24px;
+}
+
+.top_header {
+  width: calc(100% - 72px);
+}
+
+.swapbox_patch_left {
+  display: block;
+  overflow: hidden;
+  z-index: 1;
+  height: 24px;
+  width: calc(100% - 48px);
+  margin-top: -24px;
+}
+
+.swapbox_patch_left_htext {
+  display: block;
+  overflow: hidden;
+  z-index: 1;
+  height: 24px;
+  width: calc(100% - 48px);
+  margin-top: -24px;
+  border-radius: 24px 0px 0px 0px;
+}
+
+.swapbox_patch_left_htext_nav {
+  display: block;
+  overflow: hidden;
+  z-index: 1;
+  height: 24px;
+  width: 24px;
+  margin-top: -24px;
+  border-radius: 24px 0px 0px 0px;
+}
+
+.swapbox_patch_right {
+  display: block;
+  overflow: hidden;
+  z-index: 2;
+  height: 24px;
+  width: 72px;
+  margin-left: -24px;
+  margin-top: -24px;
+  border-radius: 0px 0px 0px 24px;
+}
+
+.corner_tab {
+  width: calc(72px + 10px);
+}
+
+.bottom_tab_left {
+  width: 72px;
+  height: 24px;
+  border-radius: 0px 24px 0px 0px;
+  z-index: 2;
+}
+
+.bottom_patch_right {
+  width: calc(100% - 48px);
+  margin-left: -24px;
+  height: 24px;
+  z-index: 1;
+}
+
+.btn_primary {
+  border-radius: 100px;
+  padding: 0px 16px;
+  width: 144px;
+}
+
+.btn_primary_active {
+  border: 2px solid #822eda;
+  z-index: 4;
+  border-radius: 100px;
+  padding: 0px 16px;
+  width: 144px;
+}
+
+.btn_primary_active_solid {
+  border: 2px solid #822eda;
+  background: #822eda;
+  color: white;
+  z-index: 4;
+  border-radius: 100px;
+  padding: 0px 16px;
+  width: 144px;
+}
+
+/* .btn_primary:hover {
+  border: 2px solid #822eda;
+  z-index: 4;
+  position: relative;
+} */
+
+.btn_primary:active {
+  border: 2px solid #822eda;
+  z-index: 4;
+  position: relative;
+}
+
+.charticon {
+  z-index: 2;
+}
+
+.charticon:hover {
+  opacity: 0.5;
+}
